@@ -41,5 +41,13 @@ class TranslateServiceProvider extends ServiceProvider
         Blade::directive('t', function ($expression) {
             return "<?php echo T::html($expression) ?>";
         });
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Develona\Translate\Commands\InsertTranslations::class,
+                \Develona\Translate\Commands\InsertInteractive::class,
+                \Develona\Translate\Commands\PurgeTranslations::class,
+            ]);
+        }
     }
 }
