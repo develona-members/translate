@@ -15,7 +15,7 @@ class CreateTranslationsTables extends Migration
     {
         $c = config('translate.texts_db', 'mysql');
         Schema::connection($c)->create('translations_source', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->string('code')->unique();
             $table->text('content')->nullable();
             $table->boolean('active')->default(true);
@@ -25,9 +25,9 @@ class CreateTranslationsTables extends Migration
         });
 
         Schema::connection($c)->create('translations_langs', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->char('lang', 2)->default('en');
-            $table->integer('source_id');
+            $table->foreignId('source_id');
             $table->text('translated')->nullable();
             $table->datetime('revised_at')->nullable();
             $table->timestamps();
