@@ -5,9 +5,9 @@ namespace Develona\Translate\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
-class InsertTranslationInteractive extends Command
+class InsertTranslation extends Command
 {
-    protected $signature = 'translate:insert-new {code}';
+    protected $signature = 'translate:insert {code}';
 
     /**
      * The console command description.

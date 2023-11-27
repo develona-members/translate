@@ -5,9 +5,9 @@ namespace Develona\Translate\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
-class InsertTranslations extends Command
+class ProcessViews extends Command
 {
-    protected $signature = 'translate:insert {--dir=views} {--file=}';
+    protected $signature = 'translate:views {--dir=views} {--file=}';
 
     /**
      * The console command description.
