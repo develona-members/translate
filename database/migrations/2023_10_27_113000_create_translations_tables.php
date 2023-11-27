@@ -27,7 +27,7 @@ class CreateTranslationsTables extends Migration
         Schema::connection($c)->create('translations_langs', function (Blueprint $table) {
             $table->increments('id');
             $table->char('lang', 2)->default('en');
-            $table->integer('source_id');
+            $table->foreignId('source_id');
             $table->text('translated')->nullable();
             $table->datetime('revised_at')->nullable();
             $table->timestamps();
