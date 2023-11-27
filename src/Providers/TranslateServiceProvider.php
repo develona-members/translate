@@ -13,7 +13,6 @@ class TranslateServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('translate', function ($app) {
-            \Log::info('register translate');
             return new Translate($app->config['translate']['default_language'], $app->config['translate']['texts_db']);
         });
     }
@@ -21,14 +20,13 @@ class TranslateServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        \Log::info('boot translate');
         $this->publishes([
             __DIR__.'/../../config/translate.php' => config_path('translate.php'),
         ]);
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
 
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
 
         $this->loadTranslationsFrom(__DIR__.'/../../lang', 'translate');
 
