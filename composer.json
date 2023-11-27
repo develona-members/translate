@@ -1,0 +1,26 @@
+{
+    "name": "develona/translate",
+    "description": "Frontend translation system",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Develona\\Translate\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Develona"
+        }
+    ],
+    "require": {},
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Develona\\Translate\\Providers\\TranslateServiceProvider"
+            ],
+            "aliases": {
+                "T": "Develona\\Translate\\Facades\\T"
+            }
+        }
+    }
+}
