@@ -44,8 +44,8 @@ class TranslateServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \Develona\Translate\Commands\InsertTranslations::class,
-                \Develona\Translate\Commands\InsertInteractive::class,
+                \Develona\Translate\Commands\InsertTranslation::class,
+                \Develona\Translate\Commands\ProcessViews::class,
                 \Develona\Translate\Commands\PurgeTranslations::class,
             ]);
         }
