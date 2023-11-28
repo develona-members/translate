@@ -36,8 +36,6 @@ class TranslateServiceProvider extends ServiceProvider
             __DIR__.'/../../resources/views' => resource_path('views/vendor/translate'),
         ]);
 
-        View::share('editable_texts', session('editable_texts', false));
-
         Blade::directive('t', function ($expression) {
             return "<?php echo T::html($expression) ?>";
         });

@@ -6,7 +6,7 @@ $lang = \App::getLocale();
 
 <link href="https://cdn.jsdelivr.net/npm/ace-builds@1.18.0/css/ace.min.css" rel="stylesheet">
 
-<div class="p-5 bg-light" style="position:fixed;top:0;left:200px;z-index:2000">
+<div class="p-5 bg-light" style="position:fixed;bottom:0;right:0;z-index:2000">
 {{ trans('translate::messages.intro') }} <a href="/?editable_texts=end">{{ trans('translate::messages.btn_disable') }}</a>
 </div>
 
@@ -100,7 +100,7 @@ async function saveText() {
 
 document.querySelectorAll('span[data-text]').forEach(el => {
     const code = el.getAttribute('data-text');
-    el.innerHTML = '<i class="fa fa-pencil me-2 fs-4 fw-normal" alt="edit" title="{{ $btn_edit }}"></i>';
+    el.innerHTML = '<i class="fa fa-pencil me-2 fs-4 fw-normal" alt="edit" title="{{ trans('translate::messages.btn_edit') }}"></i>';
     el.style.cursor = 'pointer';
     el.addEventListener('click', () => editText(code));
 });

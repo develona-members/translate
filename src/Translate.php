@@ -18,7 +18,6 @@ class Translate
     private $cache_id;
     private $display_hints = null;
 
-    private $skip_cache = false;
     private $db;
 
     function __construct($default_lang, $db)
@@ -28,9 +27,6 @@ class Translate
         $this->app_lang = App::getLocale();
         $request = request();
         $this->cache_id = 'text_keys_'.$request->path();
-        if ($request->input('text_flush')) {
-            Cache::forget($this->cache_id);
-        }
         $this->cached_keys = Cache::get($this->cache_id, []);
         if ($this->cached_keys) {
             $this->loadTexts($this->cached_keys);
@@ -39,9 +35,10 @@ class Translate
 
     function __destruct()
     {
-        if (!$this->skip_cache && $this->needsCacheRebuild()) {
-            $keys = array_keys($this->missing_keys);
-            Cache::put($this->cache_id, array_values(array_unique(array_merge($this->cached_keys, $keys))));
+        if ($this->needsCacheRebuild()) {
+            $keys = array_merge($this->cached_keys, array_keys($this->missing_keys));
+            $keys = array_values(array_unique($keys));
+            Cache::put($this->cache_id, $keys, 3600*24*7);
         }
     }
 
@@ -86,11 +83,6 @@ class Translate
     public function setEditableTexts($v = true)
     {
         $this->display_hints = (bool)$v;
-    }
-
-    public function skipCache($v = true)
-    {
-        $this->skip_cache = (bool)$v;
     }
 
     private function getText($key)

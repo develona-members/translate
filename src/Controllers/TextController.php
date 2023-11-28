@@ -23,13 +23,30 @@ class TextController extends Controller
         $this->db = DB::connection($db);
     }
 
-    public function index(Request $request, $id, $lang)
+    public function index(Request $request)
+    {
+        if (!$request->session()->get('editable_texts')) abort(401);
+
+        $lang = $request->input('lang');
+        if ($lang !== config('translate.default_language')) {
+            if (!in_array($lang, config('translate.translated_languages'))) {
+                $lang = config('translate.default_language');
+            }
+        }
+        App::setLocale($lang);
+
+        $rs = $this->db->table('translations_source')
+        ->where('active', 1)->pluck('code');
+
+        return view('translate::index', ['lang' => $lang, 'codes' => $rs]);
+    }
+
+    public function single(Request $request, $id, $lang)
     {
         if ($request->isMethod('POST')) {
             return $this->saveText($request, $id, $lang);
         }
 
-        // $lang = App::getLocale();
         $r = $this->db->table('translations_source')
         ->leftJoin('translations_langs', function ($join) use ($lang) {
             $join->on('translations_langs.source_id', '=', 'translations_source.id');
