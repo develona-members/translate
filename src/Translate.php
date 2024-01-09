@@ -29,6 +29,7 @@ class Translate
         $this->cache_id = 'text_keys_'.$request->path();
         $this->cached_keys = Cache::get($this->cache_id, []);
         if ($this->cached_keys) {
+            // \Log::debug("Translate: cached keys for {$this->cache_id}", $this->cached_keys);
             $this->loadTexts($this->cached_keys);
         }
     }
@@ -38,7 +39,8 @@ class Translate
         if ($this->needsCacheRebuild()) {
             $keys = array_merge($this->cached_keys, array_keys($this->missing_keys));
             $keys = array_values(array_unique($keys));
-            Cache::put($this->cache_id, $keys, 3600*24*7);
+            // \Log::debug("Translate: updating keys for {$this->cache_id}", $keys);
+            Cache::put($this->cache_id, $keys, new \DateInterval("P2D"));
         }
     }
 

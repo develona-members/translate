@@ -20,10 +20,6 @@ class TranslateServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->publishes([
-            __DIR__.'/../../config/translate.php' => config_path('translate.php'),
-        ]);
-
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
 
         $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
@@ -32,9 +28,15 @@ class TranslateServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'translate');
 
+        // php artisan vendor:publish --tag=translate-config (--force)
+        $this->publishes([
+            __DIR__.'/../../config/translate.php' => config_path('translate.php'),
+        ], 'translate-config');
+
+        // php artisan vendor:publish --tag=translate-views (--force)
         $this->publishes([
             __DIR__.'/../../resources/views' => resource_path('views/vendor/translate'),
-        ]);
+        ], 'translate-views');
 
         Blade::directive('t', function ($expression) {
             return "<?php echo T::html($expression) ?>";

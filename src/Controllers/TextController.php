@@ -35,10 +35,40 @@ class TextController extends Controller
         }
         App::setLocale($lang);
 
-        $rs = $this->db->table('translations_source')
-        ->where('active', 1)->pluck('code');
+        $query = $this->db->table('translations_source')->where('translations_source.active', 1);
 
-        return view('translate::index', ['lang' => $lang, 'codes' => $rs]);
+        $search = [
+            'code' => $request->input('code'),
+            'text' => $request->input('text'),
+        ];
+
+        $this->applySearch($query, $search, $lang);
+
+        $rs = $query->pluck('translations_source.code');
+
+        return view('translate::index', ['lang' => $lang, 'codes' => $rs, 'search' => $search]);
+    }
+
+    private function applySearch($query, $search, $lang)
+    {
+        $code = $search['code'] ? '%'.addcslashes(mb_strtolower($search['code']), '%_').'%' : null;
+        $text = $search['text'] ? '%'.addcslashes(mb_strtolower($search['text']), '%_').'%' : null;
+        if (!$code && !$text) return;
+
+        if ($code) $query->where('translations_source.code', 'like', $code);
+        if ($text) {
+            if ($lang === config('translate.default_language')) {
+                $query->where('translations_source.content', 'like', $text);
+            } else {
+                $query->leftJoin('translations_langs', function ($join) use ($lang) {
+                    $join->on('translations_langs.source_id', '=', 'translations_source.id');
+                    $join->where('translations_langs.lang', '=', $lang);
+                })->where(function ($q) use ($text) {
+                    $q->orWhere('translations_source.content', 'like', $text);
+                    $q->orWhere('translations_langs.translated', 'like', $text);
+                });
+            }
+        }
     }
 
     public function single(Request $request, $id, $lang)

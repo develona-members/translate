@@ -10,4 +10,6 @@ return [
 
     'translated_languages' => ['es', 'ca'],
 
+    'languages' => ['en' => 'English', 'es' => 'Español', 'ca' => 'Català'],
+
 ];

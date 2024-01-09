@@ -6,9 +6,12 @@ $lang = \App::getLocale();
 
 <link href="https://cdn.jsdelivr.net/npm/ace-builds@1.18.0/css/ace.min.css" rel="stylesheet">
 
-<div class="p-5 bg-light" style="position:fixed;bottom:0;right:0;z-index:2000">
-{{ trans('translate::messages.intro') }} <a href="/?editable_texts=end">{{ trans('translate::messages.btn_disable') }}</a>
+@if(empty($translate_skip_banner))
+<div class="p-5 bg-light text-center" style="position:fixed;bottom:0;right:0;z-index:2000">
+<p>{{ trans('translate::messages.intro') }} <a href="{{ route('translate.texts') }}">{{ trans('translate::messages.view_all') }}</a></p>
+<p><a class="btn btn-sm btn-danger" href="/?editable_texts=end">{{ trans('translate::messages.btn_disable') }}</a></p>
 </div>
+@endif
 
 <div class="modal" tabindex="-1" id="textsModal">
     <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -100,9 +103,16 @@ async function saveText() {
 
 document.querySelectorAll('span[data-text]').forEach(el => {
     const code = el.getAttribute('data-text');
-    el.innerHTML = '<i class="fa fa-pencil me-2 fs-4 fw-normal" alt="edit" title="{{ trans('translate::messages.btn_edit') }}"></i>';
+    if (!el.textContent) {
+      el.innerHTML = '<i class="fa fa-pencil me-2 fs-4 fw-normal"></i>';
+    }
     el.style.cursor = 'pointer';
-    el.addEventListener('click', () => editText(code));
+    el.setAttribute('title', "{{ trans('translate::messages.btn_edit') }}");
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      editText(code);
+    });
 });
 
 })();

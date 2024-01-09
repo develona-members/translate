@@ -6,13 +6,14 @@ return [
     'invalid_token' => "Invalid or expired token.",
     'invalid_parameters' => "Invalid parameters.",
 
-
     'intro' => 'Text edit mode active.',
     'code_label' => 'Identifier',
+    'text_label' => 'Text',
     'btn_disable' => 'Disable',
     'btn_edit' => 'Edit text',
     'btn_close' => 'Close',
     'btn_save' => 'Save',
     'err_not_found' => 'text not found',
+    'view_all' => 'View all',
 
 ];

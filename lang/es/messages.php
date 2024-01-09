@@ -8,10 +8,12 @@ return [
 
     'intro' => 'Modo edición de textos activado.',
     'code_label' => 'Identificador',
+    'text_label' => 'Texto',
     'btn_disable' => 'Desactivar',
     'btn_edit' => 'Editar texto',
     'btn_close' => 'Cerrar',
     'btn_save' => 'Guardar',
     'err_not_found' => 'texto no encontrado',
+    'view_all' => 'Ver todos',
 
 ];
