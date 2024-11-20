@@ -1,6 +1,17 @@
-To install, add to the `required` section of your composer.json file:
+To install, add to the root of your composer.json file:
+
+ ```
+    "repositories": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/develona-members/translate.git"
+        }
+    ],
+```
+
+Then add to the `require` section:
 
 ```
-, "develona/translate": "dev-main"
+, "develona-members/translate": "dev-main"
 ```
 
