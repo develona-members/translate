@@ -27,5 +27,18 @@ To publish config file and views, run:
 php artisan vendor:publish --provider="Develona\Translate\Providers\TranslateServiceProvider"
 ```
 
+Make sure the `texts_db` variable in the translate config file matches a valid database id in your Laravel installation.
+
+Then run:
+
+```
+php artisan migrate
+```
+
+In order to create the translation tables.
+
+
+
+
 
 
