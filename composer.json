@@ -1,5 +1,5 @@
 {
-    "name": "develona/translate",
+    "name": "develona-members/translate",
     "description": "Frontend translation system",
     "type": "library",
     "autoload": {
