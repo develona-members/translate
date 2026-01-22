@@ -10,14 +10,15 @@ class EditableTexts
 
     public function handle($request, Closure $next)
     {
-        $edit_texts = $request->input('editable_texts');
-        if ($edit_texts === 'end') {
-            $request->session()->forget('editable_texts');
-            return redirect()->route('home');
-        } elseif ($token = $request->input('token')) {
-            if ($this->verifyToken($token)) {
-                $request->session()->put('editable_texts', true);
+        if ($action = $request->input('editable_texts')) {
+            if ($action === 'end') {
+                $request->session()->forget('editable_texts');
                 return redirect()->route('home');
+            } elseif ($action === 'start' && $token = $request->input('token')) {
+                if ($this->verifyToken($token)) {
+                    $request->session()->put('editable_texts', true);
+                    return redirect()->route('home');
+                }
             }
         }
         return $next($request);

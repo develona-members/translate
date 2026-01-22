@@ -3,6 +3,7 @@
 
 namespace Develona\Translate\Providers;
 
+use Develona\Translate\Middleware\EditableTexts;
 use Develona\Translate\Translate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
@@ -45,7 +46,7 @@ class TranslateServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Develona\Translate\Commands\InsertTranslation::class,
-                \Develona\Translate\Commands\ProcessViews::class,
+                \Develona\Translate\Commands\ExtractTranslations::class,
                 \Develona\Translate\Commands\PurgeTranslations::class,
             ]);
         }

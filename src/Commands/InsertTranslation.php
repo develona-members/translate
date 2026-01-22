@@ -3,102 +3,217 @@
 namespace Develona\Translate\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class InsertTranslation extends Command
 {
-    protected $signature = 'translate:insert {code}';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
+    protected $signature = 'translate:insert {key} {--editor : Use external editor for input}';
     protected $description = 'Insert new translation in database';
 
     private $db;
+    private $stdin;
 
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         parent::__construct();
-        $db = config('settings.texts_db');
-        $this->db = \DB::connection($db);
+        $db = config('translate.texts_db', 'mysql');
+        $this->db = DB::connection($db);
+        $this->stdin = STDIN;
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
+    public function handle(): int
     {
+        $key = $this->argument('key');
 
-        $code = $this->argument('code');
+        // Validate key format
+        if (!preg_match("/^[a-z0-9_-]+$/", $key)) {
+            $this->error("Invalid key format. Use only lowercase letters, numbers, hyphens, and underscores.");
+            return 1;
+        }
 
-        $skip_main = false;
+        $skipMainContent = false;
+        $existingRecord = null;
 
-        $r = $this->db->table('translations_source')->where('code', $code)->first();
-        if ($r) {
-            $this->warn('Text exists with content: '.$r->content);
-            if ($this->confirm('Insert translations?')) {
-                $skip_main = true;
+        // Check if key already exists
+        $existingRecord = $this->db->table('translations_source')->where('code', $key)->first();
+
+        if ($existingRecord) {
+            $this->warn("Key '$key' already exists with content:");
+            $this->line($existingRecord->content);
+            $this->newLine();
+
+            if ($this->confirm('Skip main content and add translations only?', false)) {
+                $skipMainContent = true;
             } else {
-                return;
+                $this->info('Operation cancelled.');
+                return 0;
             }
         }
 
-        $content = null;
-        if (!$skip_main) {
-            $content = $this->ask('Enter the source content');
+        $defaultContent = null;
+        if (!$skipMainContent) {
+            $defaultContent = $this->getContentInput('Enter the default content');
+
+            if (empty(trim($defaultContent))) {
+                $this->error('Content cannot be empty.');
+                return 1;
+            }
         }
 
-        $langs = [];
-        foreach (config('settings.translated_languages') as $k) {
-            $t = $this->ask("Enter the translated content [$k]");
-            if ($t) $langs[$k] = $t;
+        // Get translations for each language
+        $translations = [];
+        $languages = config('translate.translated_languages', []);
+
+        if (!empty($languages)) {
+            $this->newLine();
+
+            foreach ($languages as $locale) {
+                // In editor mode, ask before opening editor for each language
+                if ($this->option('editor')) {
+                    if (!$this->confirm("Add translation for [$locale]?", true)) {
+                        continue;
+                    }
+                }
+
+                $translatedContent = $this->getContentInput("Translation for [$locale]", true);
+
+                if (!empty(trim($translatedContent))) {
+                    $translations[$locale] = $translatedContent;
+                }
+            }
         }
 
-        $this->insertText($code, $content ?: $r, $langs);
-        $this->info('Translation inserted.');
+        // Insert or update
+        $this->storeTranslation($key, $defaultContent, $existingRecord, $translations);
+
+        $this->newLine();
+        $this->info("✓ Translation '$key' inserted successfully.");
+
+        return 0;
     }
 
-    private function insertText($code, $content, $langs)
+    private function getContentInput(string $prompt, bool $allowEmpty = false): string
     {
-        $dt = date('Y-m-d H:i:s');
+        if ($this->option('editor')) {
+            return $this->readFromEditor($prompt, $allowEmpty);
+        }
 
-        if (is_string($content)) {
+        return $this->readFromStdin($prompt, $allowEmpty);
+    }
+
+    private function readFromStdin(string $prompt, bool $allowEmpty): string
+    {
+        $this->info($prompt . ' (press Ctrl+D or Ctrl+Z when finished):');
+
+        // Reopen stdin if it's at EOF
+        if (feof($this->stdin)) {
+            $this->reopenStdin();
+        }
+
+        $lines = [];
+
+        while (true) {
+            $line = fgets($this->stdin);
+
+            // Check for EOF (Ctrl+D on Unix, Ctrl+Z on Windows)
+            if ($line === false) {
+                break;
+            }
+
+            $lines[] = rtrim($line, "\n");
+        }
+
+        // Reopen stdin for next input
+        $this->reopenStdin();
+
+        return implode("\n", $lines);
+    }
+
+    private function reopenStdin(): void
+    {
+        // Close current stdin handle
+        if (is_resource($this->stdin)) {
+            fclose($this->stdin);
+        }
+
+        // Reopen stdin from terminal
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->stdin = fopen('CON', 'r');
+        } else {
+            $this->stdin = fopen('/dev/tty', 'r');
+        }
+
+        if (!$this->stdin) {
+            throw new \RuntimeException('Failed to reopen stdin');
+        }
+    }
+
+    private function readFromEditor(string $prompt, bool $allowEmpty): string
+    {
+        $this->comment($prompt);
+
+        // Create an empty temporary file
+        $tmpFile = tempnam(sys_get_temp_dir(), 'translation_');
+        file_put_contents($tmpFile, '');
+
+        // Determine which editor to use
+        $editor = getenv('EDITOR') ?: (PHP_OS_FAMILY === 'Windows' ? 'notepad' : 'vim');
+
+        // Open in editor
+        $descriptorspec = [
+            ['file', '/dev/tty', 'r'],
+            ['file', '/dev/tty', 'w'],
+            ['file', '/dev/tty', 'w']
+        ];
+
+        $process = proc_open("$editor " . escapeshellarg($tmpFile), $descriptorspec, $pipes);
+
+        if (is_resource($process)) {
+            proc_close($process);
+        }
+
+        // Read content
+        $content = file_get_contents($tmpFile);
+        unlink($tmpFile);
+
+        return trim($content);
+    }
+
+    private function storeTranslation(
+        string $key,
+        ?string $defaultContent,
+        ?object $existingRecord,
+        array $translations
+    ): void {
+        $timestamp = now()->toDateTimeString();
+
+        // Insert or get ID for main translation
+        if ($defaultContent !== null) {
             $data = [
-                'content' => $content,
+                'content' => $defaultContent,
                 'parsed_at' => null,
                 'path' => null,
                 'active' => 1,
-                'updated_at' => $dt,
+                'updated_at' => $timestamp,
             ];
 
             $id = $this->db->table('translations_source')->insertGetId(array_merge($data, [
-                'created_at' => $dt,
-                'code' => $code,
+                'created_at' => $timestamp,
+                'code' => $key,
             ]));
         } else {
-            $id = $content->id;
+            $id = $existingRecord->id;
         }
 
-        foreach($langs as $k => $content) {
+        // Insert translations for each language
+        foreach ($translations as $locale => $content) {
             $this->db->table('translations_langs')->insert([
                 'source_id' => $id,
-                'lang' => $k,
+                'lang' => $locale,
                 'translated' => $content,
-                'created_at' => $dt,
-                'updated_at' => $dt,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
             ]);
         }
     }
-
-
-
 }
