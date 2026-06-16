@@ -40,8 +40,14 @@ class Translate
     {
         $request = request();
         $route = $request->route();
-        $identifier = $route?->getName() ?? $request->path();
-        return $identifier;
+
+        // No matched route (e.g. 404): collapse all such requests into a
+        // single bucket instead of fragmenting the cache per unique path.
+        if ($route === null) {
+            return '__no_route__';
+        }
+
+        return $route->getName() ?? $request->path();
     }
 
     private function loadTextsFromCache(): void
@@ -190,7 +196,7 @@ class Translate
             // Clear all translation key caches
             Cache::flush(); // Or use a pattern if your cache driver supports it
         } else {
-            $key = 'translate_keys:' . md5($path);
+            $key = 'text_keys:' . md5($path);
             Cache::forget($key);
         }
     }
